@@ -1,7 +1,15 @@
+// -----------------------------------------------------------------------------------
+// go.mod 是 Go 语言项目的核心模块定义文件。
+// 它定义了项目的导入路径、所需的 Go 版本以及项目的所有直接和间接依赖。
+// -----------------------------------------------------------------------------------
+
+// 模块名称，通常是项目的 Git 仓库地址
 module github.com/ethereum/go-ethereum
 
+// 项目所需的最低 Go 版本
 go 1.24.0
 
+// 项目的直接依赖列表
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.2.0
 	github.com/Microsoft/go-winio v0.6.2
@@ -158,6 +166,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
+// 项目使用的工具依赖
 tool (
 	github.com/fjl/gencodec
 	golang.org/x/tools/cmd/stringer
