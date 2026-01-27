@@ -1,50 +1,93 @@
-# This Makefile is meant to be used by people that do not usually work
-# with Go source code. If you know what GOPATH is then you probably
-# don't need to bother with make.
+# -----------------------------------------------------------------------------------
+# Makefile 是 go-ethereum 项目的构建脚本。
+# 它主要为不熟悉 Go 语言构建流程的开发者提供了一组便捷的命令。
+# 如果你熟悉 GOPATH 和 go 命令行工具，你也可以直接使用 go 命令。
+#
+# 大部分命令实际上是调用了 'build/ci.go' 这个 Go 程序来执行具体的任务。
+# -----------------------------------------------------------------------------------
 
+# .PHONY 声明伪目标。这意味着 'geth', 'evm' 等不是文件名，
+# 即使当前目录下存在名为 'geth' 的文件，运行 'make geth' 依然会执行下面的命令。
 .PHONY: geth evm all test lint fmt clean devtools help
 
+# 定义变量
+# GOBIN: 编译好的二进制文件存放目录 (build/bin)
 GOBIN = ./build/bin
+# GO: 默认 Go 版本配置 (latest)
 GO ?= latest
+# GORUN: 运行 Go 代码的命令
 GORUN = go run
 
-#? geth: Build geth.
+# -----------------------------------------------------------------------------------
+# 目标：geth
+# 描述：仅编译 geth 客户端。这是最常用的命令。
+# -----------------------------------------------------------------------------------
+#? geth: 编译 geth 客户端。
 geth:
 	$(GORUN) build/ci.go install ./cmd/geth
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/geth\" to launch geth."
 
-#? evm: Build evm.
+# -----------------------------------------------------------------------------------
+# 目标：evm
+# 描述：仅编译以太坊虚拟机 (EVM) 调试工具。
+# -----------------------------------------------------------------------------------
+#? evm: 编译 EVM 工具。
 evm:
 	$(GORUN) build/ci.go install ./cmd/evm
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/evm\" to launch evm."
 
-#? all: Build all packages and executables.
+# -----------------------------------------------------------------------------------
+# 目标：all
+# 描述：编译所有的包和可执行文件 (包括 geth, bootnode, clef 等)。
+# -----------------------------------------------------------------------------------
+#? all: 编译所有包和可执行文件。
 all:
 	$(GORUN) build/ci.go install
 
-#? test: Run the tests.
+# -----------------------------------------------------------------------------------
+# 目标：test
+# 描述：先编译所有内容，然后运行测试用例。
+# -----------------------------------------------------------------------------------
+#? test: 运行测试。
 test: all
 	$(GORUN) build/ci.go test
 
-#? lint: Run certain pre-selected linters.
+# -----------------------------------------------------------------------------------
+# 目标：lint
+# 描述：运行选定的代码检查工具 (Linters)，用于检查代码风格和潜在错误。
+# -----------------------------------------------------------------------------------
+#? lint: 运行代码检查。
 lint: ## Run linters.
 	$(GORUN) build/ci.go lint
 
-#? fmt: Ensure consistent code formatting.
+# -----------------------------------------------------------------------------------
+# 目标：fmt
+# 描述：使用 gofmt 工具格式化项目中的所有 Go 源代码，确保代码风格一致。
+# -s: 简化代码 (simplify)
+# -w: 将结果写入文件 (write)
+# $(shell ...): 执行 shell 命令查找所有 .go 文件
+# -----------------------------------------------------------------------------------
+#? fmt: 确保代码格式一致。
 fmt:
 	gofmt -s -w $(shell find . -name "*.go")
 
-#? clean: Clean go cache, built executables, and the auto generated folder.
+# -----------------------------------------------------------------------------------
+# 目标：clean
+# 描述：清理 Go 编译缓存、已编译的可执行文件以及自动生成的代码目录。
+# -----------------------------------------------------------------------------------
+#? clean: 清理 Go 缓存、构建产物和自动生成的文件夹。
 clean:
 	go clean -cache
 	rm -fr build/_workspace/pkg/ $(GOBIN)/*
 
-# The devtools target installs tools required for 'go generate'.
-# You need to put $GOBIN (or $GOPATH/bin) in your PATH to use 'go generate'.
-
-#? devtools: Install recommended developer tools.
+# -----------------------------------------------------------------------------------
+# 目标：devtools
+# 描述：安装 'go generate' 命令所需的开发工具。
+# 注意：你需要将 $GOBIN (或 $GOPATH/bin) 添加到你的系统 PATH 环境变量中才能使用这些工具。
+# -----------------------------------------------------------------------------------
+#? devtools: 安装推荐的开发者工具。
 devtools:
 	env GOBIN= go install golang.org/x/tools/cmd/stringer@latest
 	env GOBIN= go install github.com/fjl/gencodec@latest
@@ -53,7 +96,11 @@ devtools:
 	@type "solc" 2> /dev/null || echo 'Please install solc'
 	@type "protoc" 2> /dev/null || echo 'Please install protoc'
 
-#? help: Get more info on make commands.
+# -----------------------------------------------------------------------------------
+# 目标：help
+# 描述：解析 Makefile 自身，提取以 '#?' 开头的注释行，生成并打印帮助信息。
+# -----------------------------------------------------------------------------------
+#? help: 获取 make 命令的更多信息。
 help: Makefile
 	@echo ''
 	@echo 'Usage:'
