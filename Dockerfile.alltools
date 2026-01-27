@@ -1,37 +1,65 @@
-# Support setting various labels on the final image
+# -----------------------------------------------------------------------------------
+# Dockerfile.alltools 用于构建包含 go-ethereum 所有工具的 Docker 镜像。
+# 与标准的 Dockerfile 不同，这个镜像不仅包含 geth，还包含 clef, bootnode, abigen 等所有辅助工具。
+# 这是一个"全家桶"镜像，非常适合开发者和测试环境。
+# -----------------------------------------------------------------------------------
+
+# 定义构建参数，用于镜像元数据标签
 ARG COMMIT=""
 ARG VERSION=""
 ARG BUILDNUM=""
 
-# Build Geth in a stock Go builder container
+# ==============================================================================
+# 第一阶段：构建阶段 (Builder Stage)
+# 使用官方 Go Alpine 镜像作为构建环境
+# ==============================================================================
 FROM golang:1.24-alpine AS builder
 
+# 安装编译所需的系统依赖
+# --no-cache: 不缓存索引，保持镜像小巧
 RUN apk add --no-cache gcc musl-dev linux-headers git
 
-# Get dependencies - will also be cached if we won't change go.mod/go.sum
+# 复制依赖描述文件并下载 Go 模块
+# 先复制再下载是为了利用 Docker 的层缓存机制
 COPY go.mod /go-ethereum/
 COPY go.sum /go-ethereum/
 RUN cd /go-ethereum && go mod download
 
+# 将所有源代码添加到容器中
 ADD . /go-ethereum
 
-# This is not strictly necessary, but it matches the "Dockerfile" steps, thus
-# makes it so that under certain circumstances, the docker layer can be cached,
-# and the builder can jump to the next (build all) command, with the go cache fully loaded.
-#
+# 首先单独编译 geth。
+# 虽然下一步会编译所有工具（包括 geth），但这步操作并非多余。
+# 它与标准 Dockerfile 的步骤完全一致，这意味着如果用户已经构建过标准 Dockerfile，
+# 这一层可以直接复用缓存，从而加速构建过程。
 RUN cd /go-ethereum && go run build/ci.go install -static ./cmd/geth
 
+# 编译所有工具！
+# 不指定具体目标时，ci.go install 默认编译 cmd/ 目录下的所有命令。
+# -static: 生成静态链接的二进制文件，方便在 Alpine 中运行。
 RUN cd /go-ethereum && go run build/ci.go install -static
 
-# Pull all binaries into a second stage deploy alpine container
+# ==============================================================================
+# 第二阶段：运行阶段 (Runtime Stage)
+# 使用最小化的 Alpine Linux 镜像
+# ==============================================================================
 FROM alpine:latest
 
+# 安装根证书，支持 HTTPS
 RUN apk add --no-cache ca-certificates
+
+# 复制所有编译好的二进制文件
+# 注意这里的源路径是 build/bin/*，表示复制所有生成的工具
+# 包括 geth, bootnode, clef, abigen, evm, rlpdump 等等
 COPY --from=builder /go-ethereum/build/bin/* /usr/local/bin/
 
+# 暴露常用端口
+# 8545: HTTP RPC, 8546: WS RPC, 30303: P2P TCP/UDP
 EXPOSE 8545 8546 30303 30303/udp
 
-# Add some metadata labels to help programmatic image consumption
+# ==============================================================================
+# 添加元数据标签
+# ==============================================================================
 ARG COMMIT=""
 ARG VERSION=""
 ARG BUILDNUM=""
