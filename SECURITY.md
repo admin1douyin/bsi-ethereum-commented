@@ -1,30 +1,29 @@
-# Security Policy
+# Security Policy (安全策略)
 
-## Supported Versions
+## Supported Versions (支持的版本)
 
-Please see [Releases](https://github.com/ethereum/go-ethereum/releases). We recommend using the [most recently released version](https://github.com/ethereum/go-ethereum/releases/latest).
+请查看 [Releases (发布页面)](https://github.com/ethereum/go-ethereum/releases)。我们强烈建议使用 [最新发布的版本](https://github.com/ethereum/go-ethereum/releases/latest)。
 
-## Audit reports
+## Audit reports (审计报告)
 
-Audit reports are published in the `docs` folder: https://github.com/ethereum/go-ethereum/tree/master/docs/audits 
+审计报告发布在 `docs` 文件夹中：https://github.com/ethereum/go-ethereum/tree/master/docs/audits
 
-| Scope | Date | Report Link |
+| 范围 (Scope) | 日期 (Date) | 报告链接 (Report Link) |
 | ------- | ------- | ----------- |
 | `geth` | 20170425 | [pdf](https://github.com/ethereum/go-ethereum/blob/master/docs/audits/2017-04-25_Geth-audit_Truesec.pdf) |
 | `clef` | 20180914 | [pdf](https://github.com/ethereum/go-ethereum/blob/master/docs/audits/2018-09-14_Clef-audit_NCC.pdf) |
 | `Discv5` | 20191015 | [pdf](https://github.com/ethereum/go-ethereum/blob/master/docs/audits/2019-10-15_Discv5_audit_LeastAuthority.pdf) |
 | `Discv5` | 20200124 | [pdf](https://github.com/ethereum/go-ethereum/blob/master/docs/audits/2020-01-24_DiscV5_audit_Cure53.pdf) |
 
-## Reporting a Vulnerability
+## Reporting a Vulnerability (报告漏洞)
 
-**Please do not file a public ticket** mentioning the vulnerability.
+**请不要提交提及漏洞的公开 Ticket/Issue。**
 
-To find out how to disclose a vulnerability in Ethereum visit [https://bounty.ethereum.org](https://bounty.ethereum.org) or email bounty@ethereum.org. Please read the [disclosure page](https://github.com/ethereum/go-ethereum/security/advisories?state=published) for more information about publicly disclosed security vulnerabilities.
+如果您发现了以太坊中的漏洞，请访问 [https://bounty.ethereum.org](https://bounty.ethereum.org) 或发送电子邮件至 bounty@ethereum.org。关于已公开披露的安全漏洞的更多信息，请阅读 [披露页面](https://github.com/ethereum/go-ethereum/security/advisories?state=published)。
 
+以下 PGP 密钥可用于与开发人员交流敏感信息（如漏洞详情）。
 
-The following key may be used to communicate sensitive information to developers.
-
-Fingerprint: `AE96 ED96 9E47 9B00 84F3 E17F E88D 3334 FA5F 6A0A`
+指纹 (Fingerprint): `AE96 ED96 9E47 9B00 84F3 E17F E88D 3334 FA5F 6A0A`
 
 ```
 -----BEGIN PGP PUBLIC KEY BLOCK-----
