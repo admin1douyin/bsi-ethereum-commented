@@ -1,39 +1,74 @@
+# -----------------------------------------------------------------------------------
+# appveyor.yml 是 AppVeyor CI 服务的配置文件。
+# 该文件专门用于在 Windows 环境下自动化构建和测试 Go-ethereum。
+# -----------------------------------------------------------------------------------
+
+# 限制 git 克隆深度为 5，只获取最近的提交，加快构建速度
 clone_depth: 5
+
+# 定义构建版本号的格式：{分支名}.{构建ID}
 version: "{branch}.{build}"
 
+# 指定使用的虚拟机镜像
+# 这里使用的是包含 Visual Studio 2019 的 Windows Server 2019
 image:
   - Visual Studio 2019
 
+# 定义环境变量矩阵 (Matrix)
+# 这将触发两个并行的构建任务：一个用于 64 位 (amd64)，一个用于 32 位 (386)
 environment:
   matrix:
     - GETH_ARCH: amd64
-      GETH_MINGW: 'C:\msys64\mingw64'
+      GETH_MINGW: 'C:\msys64\mingw64'  # 64位 MinGW 编译器路径
     - GETH_ARCH: 386
-      GETH_MINGW: 'C:\msys64\mingw32'
+      GETH_MINGW: 'C:\msys64\mingw32'  # 32位 MinGW 编译器路径
 
+# 安装阶段脚本
 install:
+  # 初始化并更新 git 子模块（如果有的话）
   - git submodule update --init --depth 1 --recursive
+  # 打印 Go 版本信息，用于调试
   - go version
 
+# 针对特定条件的构建配置
 for:
-  # Windows builds for amd64 + 386.
+  # 仅针对使用 Visual Studio 2019 镜像的构建应用以下配置
   - matrix:
       only:
         - image: Visual Studio 2019
+    
+    # 覆盖或追加环境变量
     environment:
-      # We use gcc from MSYS2 because it is the most recent compiler version available on
-      # AppVeyor. Note: gcc.exe only works properly if the corresponding bin/ directory is
-      # contained in PATH.
+      # 我们使用 MSYS2 提供的 gcc，因为它是 AppVeyor 上可用的最新版本。
+      # 注意：gcc.exe 只有在其所在的 bin/ 目录被添加到 PATH 环境变量中时才能正常工作。
       GETH_CC: '%GETH_MINGW%\bin\gcc.exe'
+      # 将 MinGW 的 bin 目录和 NSIS (安装包制作工具) 的目录添加到系统 PATH 中
       PATH: '%GETH_MINGW%\bin;C:\Program Files (x86)\NSIS\;%PATH%'
+    
+    # 构建脚本
     build_script:
-      - 'echo %GETH_ARCH%'
-      - 'echo %GETH_CC%'
-      - '%GETH_CC% --version'
+      - 'echo %GETH_ARCH%'  # 打印架构
+      - 'echo %GETH_CC%'    # 打印编译器路径
+      - '%GETH_CC% --version' # 打印编译器版本
+      # 运行 Geth 项目自带的 ci.go 脚本进行安装
+      # -dlgo: 下载指定版本的 Go 工具链（如果需要）
+      # -arch: 指定目标架构
+      # -cc: 指定 C 编译器
       - go run build/ci.go install -dlgo -arch %GETH_ARCH% -cc %GETH_CC%
+    
+    # 构建后执行的脚本（通常用于打包和发布）
     after_build:
-      # Upload builds. Note that ci.go makes this a no-op PR builds.
+      # 打包构建产物并上传。
+      # 注意：在 Pull Request 构建中，ci.go 会自动跳过上传步骤 (no-op)。
+      
+      # 1. 创建 ZIP 压缩包并上传
       - go run build/ci.go archive -arch %GETH_ARCH% -type zip -signer WINDOWS_SIGNING_KEY -upload gethstore/builds
+      
+      # 2. 创建 NSIS 安装程序 (.exe) 并上传
       - go run build/ci.go nsis -arch %GETH_ARCH% -signer WINDOWS_SIGNING_KEY -upload gethstore/builds
+    
+    # 测试脚本
     test_script:
+      # 运行测试用例
+      # -short: 运行简短测试（跳过耗时测试）
       - go run build/ci.go test -dlgo -arch %GETH_ARCH% -cc %GETH_CC% -short
