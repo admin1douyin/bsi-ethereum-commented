@@ -28,16 +28,22 @@ import (
 // DefaultRootDerivationPath is the root path to which custom derivation endpoints
 // are appended. As such, the first account will be at m/44'/60'/0'/0, the second
 // at m/44'/60'/0'/1, etc.
+// DefaultRootDerivationPath 是自定义派生端点追加到的根路径。
+// 因此，第一个帐户将位于 m/44'/60'/0'/0，第二个帐户将位于 m/44'/60'/0'/1，依此类推。
 var DefaultRootDerivationPath = DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0}
 
 // DefaultBaseDerivationPath is the base path from which custom derivation endpoints
 // are incremented. As such, the first account will be at m/44'/60'/0'/0/0, the second
 // at m/44'/60'/0'/0/1, etc.
+// DefaultBaseDerivationPath 是自定义派生端点递增的基本路径。
+// 因此，第一个帐户将位于 m/44'/60'/0'/0/0，第二个帐户将位于 m/44'/60'/0'/0/1，依此类推。
 var DefaultBaseDerivationPath = DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0, 0}
 
 // LegacyLedgerBaseDerivationPath is the legacy base path from which custom derivation
 // endpoints are incremented. As such, the first account will be at m/44'/60'/0'/0, the
 // second at m/44'/60'/0'/1, etc.
+// LegacyLedgerBaseDerivationPath 是自定义派生端点递增的旧版基本路径。
+// 因此，第一个帐户将位于 m/44'/60'/0'/0，第二个帐户将位于 m/44'/60'/0'/1，依此类推。
 var LegacyLedgerBaseDerivationPath = DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0}
 
 // DerivationPath represents the computer friendly version of a hierarchical
@@ -57,6 +63,21 @@ var LegacyLedgerBaseDerivationPath = DerivationPath{0x80000000 + 44, 0x80000000 
 // from https://github.com/ethereum/EIPs/issues/84, albeit it's not set in stone
 // yet whether accounts should increment the last component or the children of
 // that. We will go with the simpler approach of incrementing the last component.
+// DerivationPath 表示分层确定性钱包帐户派生路径的计算机友好版本。
+//
+// BIP-32 规范 https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+// 定义派生路径的形式为：
+//
+//	m / purpose' / coin_type' / account' / change / address_index
+//
+// BIP-44 规范 https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
+// 定义加密货币的 `purpose` 为 44' (或 0x8000002C)，
+// SLIP-44 https://github.com/satoshilabs/slips/blob/master/slip-0044.md 分配
+// `coin_type` 60' (或 0x8000003C) 给以太坊。
+//
+// 根据 https://github.com/ethereum/EIPs/issues/84 的规范，以太坊的根路径是 m/44'/60'/0'/0，
+// 尽管关于帐户是否应该递增最后一个组件还是其子项尚未最终确定。
+// 我们将采用递增最后一个组件的更简单方法。
 type DerivationPath []uint32
 
 // ParseDerivationPath converts a user specified derivation path string to the
@@ -65,10 +86,15 @@ type DerivationPath []uint32
 // Full derivation paths need to start with the `m/` prefix, relative derivation
 // paths (which will get appended to the default root path) must not have prefixes
 // in front of the first element. Whitespace is ignored.
+// ParseDerivationPath 将用户指定的派生路径字符串转换为内部二进制表示。
+//
+// 完整的派生路径需要以 `m/` 前缀开始，相对派生路径（将附加到默认根路径）
+// 不能在第一个元素前面有前缀。忽略空格。
 func ParseDerivationPath(path string) (DerivationPath, error) {
 	var result DerivationPath
 
 	// Handle absolute or relative paths
+	// 处理绝对或相对路径
 	components := strings.Split(path, "/")
 	switch {
 	case len(components) == 0:
@@ -84,20 +110,24 @@ func ParseDerivationPath(path string) (DerivationPath, error) {
 		result = append(result, DefaultRootDerivationPath...)
 	}
 	// All remaining components are relative, append one by one
+	// 所有剩余的组件都是相对的，逐个追加
 	if len(components) == 0 {
-		return nil, errors.New("empty derivation path") // Empty relative paths
+		return nil, errors.New("empty derivation path") // Empty relative paths // 空的相对路径
 	}
 	for _, component := range components {
 		// Ignore any user added whitespace
+		// 忽略任何用户添加的空格
 		component = strings.TrimSpace(component)
 		var value uint32
 
 		// Handle hardened paths
+		// 处理硬化路径
 		if strings.HasSuffix(component, "'") {
 			value = 0x80000000
 			component = strings.TrimSpace(strings.TrimSuffix(component, "'"))
 		}
 		// Handle the non hardened component
+		// 处理非硬化组件
 		bigval, ok := new(big.Int).SetString(component, 0)
 		if !ok {
 			return nil, fmt.Errorf("invalid component: %s", component)
@@ -112,6 +142,7 @@ func ParseDerivationPath(path string) (DerivationPath, error) {
 		value += uint32(bigval.Uint64())
 
 		// Append and repeat
+		// 追加并重复
 		result = append(result, value)
 	}
 	return result, nil
@@ -119,6 +150,7 @@ func ParseDerivationPath(path string) (DerivationPath, error) {
 
 // String implements the stringer interface, converting a binary derivation path
 // to its canonical representation.
+// String 实现 stringer 接口，将二进制派生路径转换为其规范表示。
 func (path DerivationPath) String() string {
 	result := "m"
 	for _, component := range path {
@@ -136,11 +168,13 @@ func (path DerivationPath) String() string {
 }
 
 // MarshalJSON turns a derivation path into its json-serialized string
+// MarshalJSON 将派生路径转换为其 json 序列化字符串
 func (path DerivationPath) MarshalJSON() ([]byte, error) {
 	return json.Marshal(path.String())
 }
 
 // UnmarshalJSON a json-serialized string back into a derivation path
+// UnmarshalJSON 将 json 序列化字符串转换回派生路径
 func (path *DerivationPath) UnmarshalJSON(b []byte) error {
 	var dp string
 	var err error
@@ -153,10 +187,13 @@ func (path *DerivationPath) UnmarshalJSON(b []byte) error {
 
 // DefaultIterator creates a BIP-32 path iterator, which progresses by increasing the last component:
 // i.e. m/44'/60'/0'/0/0, m/44'/60'/0'/0/1, m/44'/60'/0'/0/2, ... m/44'/60'/0'/0/N.
+// DefaultIterator 创建一个 BIP-32 路径迭代器，通过增加最后一个组件来推进：
+// 即 m/44'/60'/0'/0/0, m/44'/60'/0'/0/1, m/44'/60'/0'/0/2, ... m/44'/60'/0'/0/N。
 func DefaultIterator(base DerivationPath) func() DerivationPath {
 	path := make(DerivationPath, len(base))
 	copy(path[:], base[:])
 	// Set it back by one, so the first call gives the first result
+	// 将其退回一步，以便第一次调用给出第一个结果
 	path[len(path)-1]--
 	return func() DerivationPath {
 		path[len(path)-1]++
@@ -167,13 +204,18 @@ func DefaultIterator(base DerivationPath) func() DerivationPath {
 // LedgerLiveIterator creates a bip44 path iterator for Ledger Live.
 // Ledger Live increments the third component rather than the fifth component
 // i.e. m/44'/60'/0'/0/0, m/44'/60'/1'/0/0, m/44'/60'/2'/0/0, ... m/44'/60'/N'/0/0.
+// LedgerLiveIterator 为 Ledger Live 创建 bip44 路径迭代器。
+// Ledger Live 递增第三个组件而不是第五个组件
+// 即 m/44'/60'/0'/0/0, m/44'/60'/1'/0/0, m/44'/60'/2'/0/0, ... m/44'/60'/N'/0/0。
 func LedgerLiveIterator(base DerivationPath) func() DerivationPath {
 	path := make(DerivationPath, len(base))
 	copy(path[:], base[:])
 	// Set it back by one, so the first call gives the first result
+	// 将其退回一步，以便第一次调用给出第一个结果
 	path[2]--
 	return func() DerivationPath {
 		// ledgerLivePathIterator iterates on the third component
+		// ledgerLivePathIterator 在第三个组件上迭代
 		path[2]++
 		return path
 	}
