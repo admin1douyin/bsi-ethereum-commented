@@ -20,6 +20,8 @@ import (
 	"testing"
 )
 
+// TestURLParsing tests the URL parsing functionality.
+// TestURLParsing 测试 URL 解析功能。
 func TestURLParsing(t *testing.T) {
 	t.Parallel()
 	url, err := parseURL("https://ethereum.org")
@@ -40,6 +42,8 @@ func TestURLParsing(t *testing.T) {
 	}
 }
 
+// TestURLString tests the string representation of a URL.
+// TestURLString 测试 URL 的字符串表示。
 func TestURLString(t *testing.T) {
 	t.Parallel()
 	url := URL{Scheme: "https", Path: "ethereum.org"}
@@ -53,6 +57,8 @@ func TestURLString(t *testing.T) {
 	}
 }
 
+// TestURLMarshalJSON tests the JSON marshalling of a URL.
+// TestURLMarshalJSON 测试 URL 的 JSON 序列化。
 func TestURLMarshalJSON(t *testing.T) {
 	t.Parallel()
 	url := URL{Scheme: "https", Path: "ethereum.org"}
@@ -65,6 +71,8 @@ func TestURLMarshalJSON(t *testing.T) {
 	}
 }
 
+// TestURLUnmarshalJSON tests the JSON unmarshalling of a URL.
+// TestURLUnmarshalJSON 测试 URL 的 JSON 反序列化。
 func TestURLUnmarshalJSON(t *testing.T) {
 	t.Parallel()
 	url := &URL{}
@@ -80,6 +88,8 @@ func TestURLUnmarshalJSON(t *testing.T) {
 	}
 }
 
+// TestURLComparison tests the comparison of two URLs.
+// TestURLComparison 测试两个 URL 的比较。
 func TestURLComparison(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
