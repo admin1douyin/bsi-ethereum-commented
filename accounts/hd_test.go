@@ -24,6 +24,7 @@ import (
 
 // Tests that HD derivation paths can be correctly parsed into our internal binary
 // representation.
+// 测试 HD 派生路径可以正确解析为我们的内部二进制表示。
 func TestHDPathParsing(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -31,6 +32,7 @@ func TestHDPathParsing(t *testing.T) {
 		output DerivationPath
 	}{
 		// Plain absolute derivation paths
+		// 纯绝对派生路径
 		{"m/44'/60'/0'/0", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0}},
 		{"m/44'/60'/0'/128", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 128}},
 		{"m/44'/60'/0'/0'", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0x80000000 + 0}},
@@ -39,6 +41,7 @@ func TestHDPathParsing(t *testing.T) {
 		{"m/2147483692/2147483708/2147483648/2147483648", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0x80000000 + 0}},
 
 		// Plain relative derivation paths
+		// 纯相对派生路径
 		{"0", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0, 0}},
 		{"128", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0, 128}},
 		{"0'", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0, 0x80000000 + 0}},
@@ -46,6 +49,7 @@ func TestHDPathParsing(t *testing.T) {
 		{"2147483648", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0, 0x80000000 + 0}},
 
 		// Hexadecimal absolute derivation paths
+		// 十六进制绝对派生路径
 		{"m/0x2C'/0x3c'/0x00'/0x00", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0}},
 		{"m/0x2C'/0x3c'/0x00'/0x80", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 128}},
 		{"m/0x2C'/0x3c'/0x00'/0x00'", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0x80000000 + 0}},
@@ -54,6 +58,7 @@ func TestHDPathParsing(t *testing.T) {
 		{"m/0x8000002C/0x8000003c/0x80000000/0x80000000", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0x80000000 + 0}},
 
 		// Hexadecimal relative derivation paths
+		// 十六进制相对派生路径
 		{"0x00", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0, 0}},
 		{"0x80", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0, 128}},
 		{"0x00'", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0, 0x80000000 + 0}},
@@ -61,15 +66,17 @@ func TestHDPathParsing(t *testing.T) {
 		{"0x80000000", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0, 0x80000000 + 0}},
 
 		// Weird inputs just to ensure they work
+		// 奇怪的输入，只是为了确保它们能工作
 		{"	m  /   44			'\n/\n   60	\n\n\t'   /\n0 ' /\t\t	0", DerivationPath{0x80000000 + 44, 0x80000000 + 60, 0x80000000 + 0, 0}},
 
 		// Invalid derivation paths
-		{"", nil},              // Empty relative derivation path
-		{"m", nil},             // Empty absolute derivation path
-		{"m/", nil},            // Missing last derivation component
-		{"/44'/60'/0'/0", nil}, // Absolute path without m prefix, might be user error
-		{"m/2147483648'", nil}, // Overflows 32 bit integer
-		{"m/-1'", nil},         // Cannot contain negative number
+		// 无效的派生路径
+		{"", nil},              // Empty relative derivation path // 空的相对派生路径
+		{"m", nil},             // Empty absolute derivation path // 空的绝对派生路径
+		{"m/", nil},            // Missing last derivation component // 缺少最后一个派生组件
+		{"/44'/60'/0'/0", nil}, // Absolute path without m prefix, might be user error // 没有 m 前缀的绝对路径，可能是用户错误
+		{"m/2147483648'", nil}, // Overflows 32 bit integer // 溢出 32 位整数
+		{"m/-1'", nil},         // Cannot contain negative number // 不能包含负数
 	}
 	for i, tt := range tests {
 		if path, err := ParseDerivationPath(tt.input); !reflect.DeepEqual(path, tt.output) {
@@ -80,6 +87,8 @@ func TestHDPathParsing(t *testing.T) {
 	}
 }
 
+// testDerive tests the derivation iterator.
+// testDerive 测试派生迭代器。
 func testDerive(t *testing.T, next func() DerivationPath, expected []string) {
 	t.Helper()
 	for i, want := range expected {
@@ -89,6 +98,8 @@ func testDerive(t *testing.T, next func() DerivationPath, expected []string) {
 	}
 }
 
+// TestHdPathIteration tests the HD path iteration.
+// TestHdPathIteration 测试 HD 路径迭代。
 func TestHdPathIteration(t *testing.T) {
 	t.Parallel()
 	testDerive(t, DefaultIterator(DefaultBaseDerivationPath),
